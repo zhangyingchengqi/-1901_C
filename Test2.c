@@ -14,6 +14,9 @@ void showAll();        /* 显示 所有图书 */
 void addBook();   /*  添加书籍 */
 
 void addStudent();   /*  添加学生 */
+void showStudent();  /*   标识符：字母，数字，下划线   */
+void saveAndexit();   /*  退出管理界面且保存 */
+void initSys();   /* 系统初始化 */
 
 
 
@@ -31,11 +34,10 @@ struct Student{
 	char  *spwd;
 };
 
+
+//
 struct Student students[STUDENTLENGTH];
 int studentIndex=0;   //学生的索引
-
-
-
 
 char username[10]="admin";
 char pwd[10]="aaaaaa";
@@ -45,6 +47,9 @@ int bookIndex=0;      //书籍的索引  也可以表示总共有多少本书
 
 int main(){
     int flag=1;
+
+    initSys();
+
     do{
         system("cls");     // system(char *command);
         printf("\n********************\n");
@@ -74,6 +79,35 @@ int main(){
     return 0;
 }
 
+void initSys(){
+     system("cls");
+     printf("=========================\n");
+     printf("系统初始化.....\n");
+     Sleep( 500 );
+
+    FILE *fp;
+    if((fp=fopen("books.dat","rt"))==NULL){
+        printf("暂无books.dat!\n");
+        getch();
+    }
+    int  i= fread(  books,sizeof(struct Book),100,fp);   //100表示最多从文件 中读取多少个struct Book, 实际读取了  i  .
+    //printf(  "读到了%d条book数据\n",i);
+    bookIndex=i;
+    fclose(  fp );
+
+    if((fp=fopen("students.dat","rt"))==NULL){
+        printf("暂无students.dat!\n");
+        getch();
+    }
+    i= fread(  students,sizeof(struct Student),STUDENTLENGTH,fp);
+    //printf(  "读到了%d条学生数据\n",i);
+    studentIndex=i;
+    fclose(  fp );
+
+    //pressKey();
+}
+
+
 void adminMenu(){
     int flag=1;
     do{
@@ -93,11 +127,56 @@ void adminMenu(){
             case '1': addBook(); pressKey();break;
             case '2': showAll(); pressKey();  break;
             case '3':  addStudent(); pressKey(); break;
-            case '4':  pressKey();   break;
-            case '5':   flag=0;    break;
+            case '4':  showStudent();  pressKey();   break;
+            case '5':   saveAndexit(); flag=0;    break;
             default: printf("没有这个选项"); pressKey();
         }
     }while(  flag );
+}
+
+
+//请自已加入学生信息的保存
+void saveAndexit(){
+    FILE *fp;
+
+    //1.先保存书，     books.dat     txt     w
+    if((fp=fopen("books.dat","wt"))==NULL){
+        printf("保存书籍数据失败。。");
+        getch();
+    }
+    //struct Book 求一个结构体元素的大小   字节
+    //printf("\n一个 struct book的大小为%d\n", sizeof( struct Book ) );
+    fwrite(  books,sizeof(struct Book),bookIndex,fp);
+    fclose(  fp );
+    printf("\n保存%d条书籍数据到  books.dat成功\n",bookIndex);
+
+    if(  (fp=fopen("students.dat","wt"))==NULL  ){
+        printf("保存学生数据文件失败。。");
+        getch();
+    }
+    fwrite(  students,sizeof(struct Student),studentIndex,fp);
+    fclose( fp );
+    printf("\n保存%d条学生信息数据到 students.txt成功\n",studentIndex);
+
+    pressKey();
+}
+
+
+void showStudent(){
+    system("cls");
+    if(  studentIndex==0 ){
+        printf("\n系统暂无任何学员。\n");
+        return;
+    }
+    printf("\n============显示所有的学员=============\n");
+    printf("\n编号\t学生名\n");
+    int i=0;
+    for(i=0;i<studentIndex;i++){
+        struct Student b=students[i];
+        printf("\n%d\t%s\n",  b.sno,b.sname  );
+    }
+    printf("\n=======================================\n");
+    printf("\n共有%d人\n",studentIndex);
 }
 
 void addStudent(){
@@ -138,6 +217,8 @@ void addStudent(){
     //统计 功能： 总共有多少书， 本次新增了多少书
     printf("\n本次录入%d个学生,共有%d位学生\n",i-1,studentIndex);
     pressKey();
+
+
 }
 
 void showAll(){
@@ -158,7 +239,7 @@ void showAll(){
     }
     meanPrice=total/bookIndex;
     printf("\n=======================================\n");
-    printf("\n共有%d本书,总价%10.2lf,均价：%10.2lf\n",bookIndex);
+    printf("\n共有%d本书,总价%10.2lf,均价：%10.2lf\n",bookIndex,total, meanPrice);
 }
 
 void addBook(){
@@ -186,6 +267,7 @@ void addBook(){
         //4. author 作者   %s
         printf("\n请输入书籍作者:\n");
         scanf("%s",     &books[bookIndex].author );
+        fflush(stdin );
 
         //汇总输出
         printf("\n输入的书籍信息为:\n");   //   10.00
@@ -200,6 +282,9 @@ void addBook(){
     }while(    flag=='y'||flag=='Y'  );
     //统计 功能： 总共有多少书， 本次新增了多少书
     printf("\n本次录入%d本书,共有%d本书\n",i-1,bookIndex);
+
+
+
     pressKey();
 
 }
